@@ -34,8 +34,8 @@ DRY_RUN=1 ./install.sh
 - `scripts/10-misc.sh`: passwordless sudo, baseline packages, GNOME auto-brightness setting, and placeholders for personal installs like Node or Chrome.
 - `scripts/20-wifi.sh`: renders the Broadcom BCM43602 NVRAM template using the live Wi-Fi MAC address and installs it under `/usr/lib/firmware/brcm`.
 - `scripts/30-sound.sh`: clones `davidjo/snd_hda_macbookpro` into `/var/lib/mbp13-linux-setup` and installs the Cirrus CS8409 driver via DKMS.
-- `scripts/40-touchbar-camera.sh`: installs/restores the T1 iBridge Touch Bar and FaceTime HD camera path.
-- `scripts/50-suspend.sh`: configures suspend memory mode and disables PCI D3cold before sleep.
+- `scripts/40-touchbar-camera.sh`: installs/restores the T1 iBridge Touch Bar and FaceTime HD camera path, including a forced iBridge reconfigure mode for resume.
+- `scripts/50-suspend.sh`: configures suspend memory mode, disables PCI D3cold before sleep, and runs delayed Touch Bar recovery after resume.
 - `scripts/90-report.sh`: prints a hardware and service report.
 
 ## Wi-Fi Template

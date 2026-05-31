@@ -71,11 +71,24 @@ apple-ib-als
 "
   write_file_if_changed "$MODULES_LOAD_FILE" 0644 "$modules_load"
 
-  helper='#!/usr/bin/env bash
+helper='#!/usr/bin/env bash
 set -Eeuo pipefail
 
 log() { printf "[%s] %s\n" "$(date "+%F %T")" "$*"; }
 read_sysfs() { [ -r "$1" ] && cat "$1" 2>/dev/null || true; }
+force_reconfigure=0
+
+case "${1:-}" in
+  "")
+    ;;
+  --resume|--force-reconfigure)
+    force_reconfigure=1
+    ;;
+  *)
+    printf "usage: %s [--resume|--force-reconfigure]\n" "$0" >&2
+    exit 2
+    ;;
+esac
 
 find_ibridge_usb() {
   local dev
@@ -106,7 +119,13 @@ modprobe apple-ib-als || true
 usbdev="$(find_ibridge_usb)" || { log "05ac:8600 iBridge not found"; exit 1; }
 path="/sys/bus/usb/devices/$usbdev"
 
-if [ "$(read_sysfs "$path/bConfigurationValue")" != "1" ]; then
+if [ "$force_reconfigure" = "1" ]; then
+  log "Force reconfiguring iBridge USB configuration 1 for $usbdev"
+  printf 0 >"$path/bConfigurationValue" 2>/dev/null || true
+  sleep 1
+  printf 1 >"$path/bConfigurationValue"
+  sleep 2
+elif [ "$(read_sysfs "$path/bConfigurationValue")" != "1" ]; then
   log "Selecting iBridge USB configuration 1 for $usbdev"
   printf 1 >"$path/bConfigurationValue"
   sleep 2
@@ -164,4 +183,3 @@ main() {
 }
 
 main "$@"
-

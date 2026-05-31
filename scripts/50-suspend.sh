@@ -52,6 +52,7 @@ set -u
 
 MEMORY_SLEEP_MODE=\"$SUSPEND_MEMORY_SLEEP\"
 SERVICE_HELPER=\"$SERVICE_HELPER\"
+TOUCHBAR_RESUME_DELAY=\"$TOUCHBAR_RESUME_DELAY\"
 
 set_memory_sleep_mode() {
   if [ -r /sys/power/mem_sleep ] && grep -qw \"\$MEMORY_SLEEP_MODE\" /sys/power/mem_sleep; then
@@ -66,7 +67,8 @@ case \"\${1:-}:\${2:-}\" in
     ;;
   post:suspend|post:hybrid-sleep|post:suspend-then-hibernate)
     if [ -x \"\$SERVICE_HELPER\" ]; then
-      \"\$SERVICE_HELPER\" || true
+      sleep \"\$TOUCHBAR_RESUME_DELAY\"
+      \"\$SERVICE_HELPER\" --resume || \"\$SERVICE_HELPER\" || true
     fi
     ;;
 esac
