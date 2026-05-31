@@ -1,10 +1,28 @@
-# MacBookPro13 Linux Setup
+# Linux (Ubuntu 26.04) setup on Macbook Pro 2016 (MacBookPro 13,3) 
 
-Opinionated Ubuntu setup scripts for my MacBookPro13,2 / MacBookPro13,3 fresh installs.
+Ubuntu setup scripts for my 2016 MacBookPro13,3 fresh installs.
 
-This repo intentionally does personal setup work as well as hardware fixes. By default it can enable full passwordless sudo, install baseline developer packages, configure Wi-Fi firmware, build sound and Touch Bar drivers, and install a suspend workaround.
+This does personal setup work as well as hardware fixes. By default it can enable full passwordless sudo, install baseline developer packages, configure Wi-Fi firmware, build sound and Touch Bar drivers, and install a suspend workaround.
 
 Before running it on any machine, review `config.env`. Set any `RUN_*` option to `0` to skip that module.
+
+A fresh installation of Ubuntu 26.04 on this system leaves few things not working properly: Wi-fi, Audio, Touchbar, Webcam, Suspend
+
+I initially followed:
+- https://github.com/xtocdra/macbookpro13-2
+- https://gist.github.com/almas/5f75adb61bccf604b6572f763ce63e3e
+- http://inku.bot.nu/posts/fedora-macbook2017/
+- https://github.com/davidjo/snd_hda_macbookpro
+- https://github.com/rehans/macbook12-spi-driver-cachyos
+- https://www.reddit.com/r/linuxmint/comments/1r348u6/no_audio_macbook_pro_loving_all_the_rest_new_life/
+
+I could not get the touchbar to work on the new kernel 7.0.0 that ships with Ubuntu 26.04 so I used codex to fix it and write this set of installation scripts to streamline the process on fresh installs.
+
+On my system I split the disk in 2 and installed MacOS Sonoma using OpenCore Legacy Patcher, then installed Ubuntu. In the OpenCore EFI boot menu, press space to see the additional booting options. The Ubuntu EFI option was not showing, I had to modify the OpenCore `EFI/OC/config.plist` file where I modified the field `Misc -> BlessOverride` by adding the path to the Ubuntu EFI file `\EFI\ubuntu\shimx64.efi`. I also set `HideAuxiliary = false`, this brought up the Ubuntu EFI option in OpenCore, so that I could boot it.
+
+Once Ubuntu is installed, best would be to clone this repo on a usb key (Wifi will not work on first boot) and then proceed with the installation scripts below to first enable Wifi, connect to a network and then run all the patches for Audio, Touchbar, Camera and Suspend.
+
+After installing the patches and rebooting, everything is working on my system.
 
 ## Fresh Install Flow
 
