@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+APP_NAME="Disconnect Drive"
+
+notify() {
+  notify-send "$APP_NAME" "$1" 2>/dev/null || true
+}
+
+error_dialog() {
+  local message="$1"
+  if command -v zenity >/dev/null 2>&1; then
+    zenity --error --title="$APP_NAME" --text="$message" 2>/dev/null || true
+  else
+    printf '%s\n' "$message" >&2
+  fi
+}
+
+info_dialog() {
+  local message="$1"
+  if command -v zenity >/dev/null 2>&1; then
+    zenity --info --title="$APP_NAME" --text="$message" 2>/dev/null || true
+  else
+    printf '%s\n' "$message"
+  fi
+}
+
+choose_drive() {
+  local rows=()
+  local line name size model tran hotplug type label
+
+  while IFS= read -r line; do
+    eval "$line"
+    [ "${TYPE:-}" = "disk" ] || continue
+    [ "${HOTPLUG:-0}" = "1" ] || continue
+    [ "${TRAN:-}" = "usb" ] || continue
+
+    label="$(lsblk -nrpo LABEL "$NAME" 2>/dev/null | awk 'NF { print; exit }')"
+    [ -n "$label" ] || label="-"
+    rows+=("$NAME" "${MODEL:-USB drive}" "${SIZE:-unknown}" "$label")
+  done < <(lsblk -P -dnpo NAME,SIZE,MODEL,TRAN,HOTPLUG,TYPE)
+
+  if [ "${#rows[@]}" -eq 0 ]; then
+    info_dialog "No connected USB storage drives were found."
+    return 1
+  fi
+
+  if [ "${#rows[@]}" -eq 4 ]; then
+    printf '%s\n' "${rows[0]}"
+    return 0
+  fi
+
+  zenity --list \
+    --title="$APP_NAME" \
+    --text="Select a USB storage drive to safely disconnect." \
+    --column="Device" --column="Model" --column="Size" --column="Label" \
+    --hide-column=1 --print-column=1 \
+    "${rows[@]}"
+}
+
+mounted_children() {
+  local drive="$1"
+  lsblk -nrpo NAME,MOUNTPOINT "$drive" | awk '$2 != "" { print $1 }'
+}
+
+unmount_children() {
+  local drive="$1"
+  local child
+
+  while IFS= read -r child; do
+    [ "$child" != "$drive" ] || continue
+    udisksctl unmount -b "$child" >/dev/null
+  done < <(mounted_children "$drive")
+}
+
+main() {
+  local drive output
+
+  command -v udisksctl >/dev/null 2>&1 || {
+    error_dialog "udisksctl is not installed."
+    exit 1
+  }
+
+  command -v zenity >/dev/null 2>&1 || {
+    error_dialog "zenity is not installed."
+    exit 1
+  }
+
+  drive="$(choose_drive)" || exit 0
+  [ -n "$drive" ] || exit 0
+
+  if ! zenity --question \
+    --title="$APP_NAME" \
+    --text="Unmount and power off $drive?\n\nWait for the success message before unplugging it." \
+    --ok-label="Disconnect" \
+    --cancel-label="Cancel" 2>/dev/null; then
+    exit 0
+  fi
+
+  if ! output="$(unmount_children "$drive" 2>&1)"; then
+    error_dialog "Could not unmount $drive.\n\n$output\n\nClose any files or terminals using the drive and try again."
+    exit 1
+  fi
+
+  if ! output="$(udisksctl power-off -b "$drive" 2>&1)"; then
+    error_dialog "Could not power off $drive.\n\n$output"
+    exit 1
+  fi
+
+  notify "$drive is safe to unplug."
+  info_dialog "$drive is safe to unplug."
+}
+
+main "$@"

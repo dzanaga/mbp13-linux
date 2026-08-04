@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Disconnect USB Drive
+Comment=Unmount and power off a removable USB storage drive
+Exec=/home/dzanaga/.local/bin/disconnect-removable-drive
+Icon=drive-removable-media-usb
+Terminal=false
+Categories=Utility;
+StartupNotify=true
