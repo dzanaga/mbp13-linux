@@ -71,6 +71,15 @@ main() {
   find /sys/class/video4linux -maxdepth 1 -mindepth 1 -printf '%f ' 2>/dev/null || true
   printf '\n'
 
+  section "usbc power"
+  if [ -x /usr/local/sbin/mbp13-usbc-power ]; then
+    /usr/local/sbin/mbp13-usbc-power --status || true
+  else
+    printf 'helper: missing\n'
+  fi
+  systemctl is-enabled mbp13-usbc-power.service 2>/dev/null | sed 's/^/service-enabled: /' || true
+  systemctl is-active mbp13-usbc-power.service 2>/dev/null | sed 's/^/service-active: /' || true
+
   section "suspend"
   printf 'mem_sleep: '
   cat /sys/power/mem_sleep 2>/dev/null || true

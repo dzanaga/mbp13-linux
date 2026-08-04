@@ -42,6 +42,7 @@ main() {
   if [ "$status" -eq 0 ]; then run_selected_module RUN_MISC "misc" scripts/10-misc.sh || status=$?; fi
   if [ "$status" -eq 0 ]; then run_selected_module RUN_SOUND "sound" scripts/30-sound.sh || status=$?; fi
   if [ "$status" -eq 0 ]; then run_selected_module RUN_TOUCHBAR_CAMERA "touchbar-camera" scripts/40-touchbar-camera.sh || status=$?; fi
+  if [ "$status" -eq 0 ]; then run_selected_module RUN_USBC_POWER "usbc-power" scripts/45-usbc-power.sh || status=$?; fi
   if [ "$status" -eq 0 ]; then run_selected_module RUN_SUSPEND "suspend" scripts/50-suspend.sh || status=$?; fi
 
   bash "$ROOT_DIR/scripts/90-report.sh" || true
